@@ -1,2 +1,2 @@
 # max-lmhtest
- Take-home assignment for Last Mile Health
+ Take-home app assignment for Last Mile Health
