@@ -1,74 +1,139 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TextInput,
+} from "react-native";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const TableExample = () => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const response = await fetch(
+          "https://incldigitrans-5881.restdb.io/rest/cases-disease",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-apikey": "67f3e466636df6b1f15d955a",
+              "cache-control": "no-cache",
+            },
+          }
+        );
+
+        const json = await response.json();
+        setData(json);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecords();
+  }, []);
+
+  const filteredData = data.filter((item) =>
+    item["Disease Classification"]?.toLowerCase().includes(filter.toLowerCase())
   );
-}
+
+  return (
+    <ScrollView horizontal>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>🩺 Patient Records</Text>
+
+        {/* Filter Input */}
+        <TextInput
+          placeholder="Filter by disease..."
+          placeholderTextColor="#888"
+          value={filter}
+          onChangeText={setFilter}
+          style={styles.input}
+        />
+
+        {loading ? (
+          <ActivityIndicator
+            color="#fff"
+            size="large"
+            style={{ marginTop: 20 }}
+          />
+        ) : (
+          <>
+            {/* Header */}
+            <View style={[styles.row, styles.header]}>
+              <Text style={[styles.cell, styles.headerText]}>Date</Text>
+              <Text style={[styles.cell, styles.headerText]}>Gender</Text>
+              <Text style={[styles.cell, styles.headerText]}>Age</Text>
+              <Text style={[styles.cell, styles.headerText]}>Disease</Text>
+            </View>
+
+            {/* Filtered Rows */}
+            {filteredData.map((item, index) => (
+              <View key={item._id || index} style={styles.row}>
+                <Text style={styles.cell}>
+                  {item["Date Recorded"]?.split("T")[0] || "—"}
+                </Text>
+                <Text style={styles.cell}>{item["Client Gender"] || "—"}</Text>
+                <Text style={styles.cell}>{item["Client Age"] || "—"}</Text>
+                <Text style={styles.cell}>
+                  {item["Disease Classification"] || "—"}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </ScrollView>
+  );
+};
+
+export default TableExample;
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    padding: 16,
+    paddingTop: 60,
+    backgroundColor: "#000",
+    minWidth: 600,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 20,
+    textAlign: "center",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  input: {
+    backgroundColor: "#222",
+    color: "#fff",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#444",
+  },
+  header: {
+    backgroundColor: "#222",
+  },
+  cell: {
+    flex: 1,
+    padding: 12,
+    fontSize: 14,
+    color: "#fff",
+    minWidth: 120,
+  },
+  headerText: {
+    fontWeight: "bold",
+    color: "#fff",
   },
 });

@@ -1,109 +1,160 @@
-import { StyleSheet, Image, Platform } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { Text, TextInput, Button, StyleSheet, ScrollView } from "react-native";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+const TableExample = () => {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newRecord, setNewRecord] = useState({
+    date: "",
+    gender: "",
+    age: "",
+    disease: "",
+  });
 
-export default function TabTwoScreen() {
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const response = await fetch(
+          "https://incldigitrans-5881.restdb.io/rest/cases-disease",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "x-apikey": "67f3e466636df6b1f15d955a",
+              "cache-control": "no-cache",
+            },
+          }
+        );
+
+        const json = await response.json();
+        setData(json);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecords();
+  }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(
+        "https://incldigitrans-5881.restdb.io/rest/cases-disease",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-apikey": "67f3e466636df6b1f15d955a",
+          },
+          body: JSON.stringify({
+            "Date Recorded": newRecord.date,
+            "Client Gender": newRecord.gender,
+            "Client Age": newRecord.age,
+            "Disease Classification": newRecord.disease,
+          }),
+        }
+      );
+
+      const json = await response.json();
+      console.log("Record added:", json);
+      // Optionally, re-fetch data after adding
+      setData((prevData) => [...prevData, json]);
+    } catch (error) {
+      console.error("Error adding record:", error);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
+    <ScrollView horizontal>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>🩺 Patient Records</Text>
+
+        {/* New Record Form */}
+        <Text style={styles.formTitle}>📥 Add New Record</Text>
+        <TextInput
+          placeholder="Date (YYYY-MM-DD)"
+          placeholderTextColor="#fff"
+          value={newRecord.date}
+          onChangeText={(text) => setNewRecord({ ...newRecord, date: text })}
+          style={styles.input}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user's current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+        <TextInput
+          placeholder="Gender"
+          placeholderTextColor="#fff"
+          value={newRecord.gender}
+          onChangeText={(text) => setNewRecord({ ...newRecord, gender: text })}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Age"
+          placeholderTextColor="#fff"
+          value={newRecord.age}
+          onChangeText={(text) => setNewRecord({ ...newRecord, age: text })}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Disease Classification"
+          placeholderTextColor="#fff"
+          value={newRecord.disease}
+          onChangeText={(text) => setNewRecord({ ...newRecord, disease: text })}
+          style={styles.input}
+        />
+        <Button title="Add Record" onPress={handleSubmit} />
+      </ScrollView>
+    </ScrollView>
   );
-}
+};
+
+export default TableExample;
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    padding: 16,
+    paddingTop: 60,
+    backgroundColor: "#000",
+    minWidth: 600,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+    marginTop: 20,
+    textAlign: "center",
+  },
+  input: {
+    backgroundColor: "#222",
+    color: "#fff",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 12,
+    fontSize: 16,
+  },
+  row: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#444",
+  },
+  header: {
+    backgroundColor: "#222",
+  },
+  cell: {
+    flex: 1,
+    padding: 12,
+    fontSize: 14,
+    color: "#fff",
+    minWidth: 120,
+  },
+  headerText: {
+    fontWeight: "bold",
+    color: "#fff",
   },
 });
